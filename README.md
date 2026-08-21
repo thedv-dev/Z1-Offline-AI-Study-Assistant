@@ -2,147 +2,228 @@
 
 > **A privacy-focused, offline AI study assistant that answers questions directly from your own study materials using Hybrid RAG.**
 
-Z1 is an experimental offline AI study assistant designed to make AI-powered learning accessible without depending on cloud services or a constant internet connection.
+Z1 is an experimental **offline AI study assistant** designed to make AI-powered learning accessible without depending on cloud-based AI services or a constant internet connection.
 
-It allows students to upload PDF study materials, indexes their contents locally, and answers questions using a combination of **BM25 keyword retrieval** and **vector-based semantic retrieval**. The retrieved context is then passed to a locally running language model to generate a concise, grounded answer.
+Users can upload PDF study materials, which Z1 processes locally and stores in a SQLite-based RAG database. When a question is asked, Z1 combines **BM25 keyword retrieval** with **vector-based semantic retrieval** to find relevant passages. These passages are then provided to a locally running language model to generate a grounded answer.
 
-The long-term goal of Z1 is to evolve from a document-based RAG system into a **privacy-preserving personal AI tutor and "second brain."**
+The long-term vision of Z1 is to evolve from a document-based RAG assistant into a **privacy-preserving personal AI tutor and "second brain."**
 
 ---
 
 ## ✨ Features
 
-* 📚 **Ask questions from uploaded PDFs**
-* 🔒 **Local-first / privacy-focused architecture**
-* 🌐 **Designed for offline AI-assisted learning**
-* 🔎 **Hybrid retrieval**
+* 📚 Ask questions from uploaded PDF documents
+* 🔒 Local-first and privacy-focused architecture
+* 🌐 Designed for offline AI-assisted learning
+* 🔎 Hybrid retrieval system
 
   * BM25 keyword search
   * Vector semantic search
-* 🧠 **Local embedding generation**
-* 🤖 **Local LLM inference**
-* 🗃️ **SQLite-based knowledge store**
-* ⚡ **SQLite-Vec vector search**
-* 📄 **Page-level source tracking**
-* 💬 **Streamlit chat interface**
-* 🔄 **Automatic re-indexing when a PDF is uploaded**
-* 🧹 **Session-based "New Chat" functionality**
+* 🧠 Local embedding generation
+* 🤖 Local LLM inference
+* 🗃️ SQLite document database
+* ⚡ SQLite-Vec vector search
+* 📄 Page-level source tracking
+* 💬 Streamlit chat interface
+* 🔄 Automatic PDF ingestion after upload
+* ⚠️ Indexing error handling
+* 🧹 New Chat functionality
+* 🛡️ Graceful handling when no indexed documents are available
 
-## The current system combines BM25 and vector retrieval because keyword search is useful for exact terms while vector search is useful for semantically similar concepts.
+The hybrid retrieval approach combines the strengths of lexical and semantic search: BM25 helps with exact keywords and technical terms, while vector search helps identify conceptually similar content.
 
-## 🏗️ Architecture
+---
+
+# 🏗️ Architecture
 
 ```text
-                    ┌─────────────────────┐
-                    │     Streamlit UI    │
-                    │       app.py        │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │      chat.py        │
-                    │   Query Orchestrator│
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │     retrieve.py     │
-                    │   Hybrid Retrieval  │
-                    └─────────┬───────────┘
-                              │
-                 ┌────────────┴────────────┐
-                 ▼                         ▼
-        ┌────────────────┐        ┌────────────────┐
-        │     BM25       │        │  Vector Search │
-        │ Keyword Search │        │  SQLite-Vec    │
-        └────────┬───────┘        └────────┬───────┘
-                 │                         │
-                 └────────────┬────────────┘
-                              ▼
-                    ┌─────────────────────┐
-                    │    SQLite RAG DB    │
-                    │  Text + Embeddings  │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │   Local Embedding   │
-                    │       Server        │
-                    └─────────────────────┘
+                         ┌─────────────────────┐
+                         │     Streamlit UI    │
+                         │       app.py        │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │      chat.py        │
+                         │  Query Orchestrator │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │     retrieve.py     │
+                         │   Hybrid Retrieval  │
+                         └──────────┬──────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+                    ▼                               ▼
+             ┌──────────────┐              ┌────────────────┐
+             │     BM25     │              │ Vector Search  │
+             │    Search    │              │  SQLite-Vec    │
+             └──────┬───────┘              └───────┬────────┘
+                    │                              │
+                    └──────────────┬───────────────┘
+                                   │
+                                   ▼
+                         ┌─────────────────────┐
+                         │    SQLite RAG DB    │
+                         │  Text + Embeddings  │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │   Local Embedding   │
+                         │       Server        │
+                         └─────────────────────┘
 
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │    Local LLM API    │
-                    │  Chat Completions   │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │   Grounded Answer   │
-                    │   + Source Pages    │
-                    └─────────────────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │    Local LLM API    │
+                         │  Chat Completions   │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │   Grounded Answer   │
+                         │   + Source Pages    │
+                         └─────────────────────┘
 ```
 
 ---
 
-## 🔄 How It Works
+# 🔄 How Z1 Works
 
-### 1. Upload
+## 1. Upload a PDF
 
-A user uploads a PDF through the Streamlit interface.
+The user uploads a PDF through the Streamlit sidebar.
 
-The PDF is stored in the `books/` directory. The application then runs the ingestion pipeline automatically.
+The file is saved into:
 
-### 2. Text Extraction
+```text
+books/
+```
 
-`ingest.py` opens each PDF using PyMuPDF and extracts text page by page.
+Z1 then automatically starts the ingestion process.
 
-The extracted text is divided into chunks of approximately **200 words**.
+The application now also catches ingestion failures and displays an error instead of silently crashing.
 
-### 3. Embedding
+---
 
-Each chunk is sent to a locally running embedding service:
+## 2. Extract Text
+
+`ingest.py` uses **PyMuPDF** to open each PDF and extract text page by page.
+
+Each page's text is divided into chunks of approximately:
+
+```text
+200 words
+```
+
+---
+
+## 3. Generate Embeddings
+
+Every text chunk is sent to the local embedding service:
 
 ```text
 http://127.0.0.1:8080/embedding
 ```
 
-The resulting 384-dimensional embedding is stored in SQLite-Vec.
+The returned embedding is stored in the SQLite-Vec vector database.
 
-### 4. Hybrid Retrieval
+The current vector table uses:
 
-When a user asks a question, Z1 performs two retrieval operations:
+```text
+384-dimensional embeddings
+```
 
-**BM25**
+---
 
-Finds relevant chunks based on keyword matching.
+## 4. Store the Knowledge Base
 
-**Vector Search**
+Z1 maintains a SQLite database at:
 
-Converts the question into an embedding and searches for semantically similar chunks using SQLite-Vec.
+```text
+data/rag.db
+```
 
-The results are combined and deduplicated to create the final context.
+The database contains:
 
-### 5. Local LLM
+* Chunk ID
+* Source filename
+* Page number
+* Extracted text
+* Vector embeddings
 
-The retrieved chunks are passed to a locally running OpenAI-compatible chat-completion endpoint:
+Before rebuilding the index, the existing chunks and vectors are cleared.
+
+## The updated ingestion script also checks whether there are actually PDFs in the `books/` directory. If none are found, it leaves the existing database unchanged rather than deleting the current index.
+
+# 🔎 Hybrid Retrieval
+
+When the user asks a question, Z1 performs two searches.
+
+### BM25 Search
+
+BM25 performs lexical/keyword-based retrieval.
+
+It is particularly useful for:
+
+* Exact terminology
+* Names
+* Technical words
+* Formulas
+* Specific phrases
+
+### Vector Search
+
+The question is converted into an embedding and compared against the stored vector embeddings using SQLite-Vec.
+
+This helps retrieve content that is **semantically similar**, even when the wording differs.
+
+### Combined Retrieval
+
+Z1 combines the results from both methods, removes duplicate chunk IDs, and keeps the best candidates.
+
+## The updated retrieval implementation dynamically loads the current database index when a query is made rather than assuming the database was available when the module was initially imported.
+
+# 🤖 Local LLM
+
+The retrieved document chunks are sent to a locally running OpenAI-compatible chat-completion API:
 
 ```text
 http://127.0.0.1:8081/v1/chat/completions
 ```
 
-The system prompt instructs the model to answer **only from the retrieved document context**. If the information is unavailable, it returns:
+Z1 uses a system prompt that instructs the model to:
 
-> "The answer is not available in the uploaded documents."
+1. Answer only from the retrieved context.
+2. Clearly state when the answer is unavailable.
+3. Keep explanations clear and brief.
 
-### 6. Source Display
+If no relevant documents are available, Z1 returns:
 
-Answers are accompanied by the source document and page number of the retrieved chunks, allowing the user to identify where the answer came from.
+> **The answer is not available in the uploaded documents.**
 
 ---
 
-## 📁 Project Structure
+# 📄 Source Tracking
+
+Z1 doesn't just return an answer.
+
+It also keeps track of:
+
+```text
+Source PDF
+Page number
+```
+
+The Streamlit interface displays these sources underneath the assistant's response.
+
+## This makes it easier to trace the generated answer back to the uploaded study material.
+
+# 📁 Project Structure
 
 ```text
 Z1/
@@ -160,206 +241,342 @@ Z1/
     └── rag.db
 ```
 
-### `app.py`
+---
+
+# 🧩 Core Files
+
+## `app.py`
 
 The Streamlit frontend.
 
-It handles:
+Responsibilities:
 
-* PDF uploads
+* PDF uploading
+* Saving PDFs
+* Starting ingestion
 * Chat interface
-* Session chat history
-* Source display
-* Triggering the ingestion process
+* Session conversation history
+* Displaying sources
+* New Chat functionality
+* Handling ingestion failures
 
-### `ingest.py`
+---
+
+## `ingest.py`
 
 The document ingestion pipeline.
 
-It:
+Responsibilities:
 
-1. Reads PDFs
-2. Extracts page text
-3. Splits text into chunks
-4. Generates embeddings
-5. Stores chunks in SQLite
-6. Stores embeddings in SQLite-Vec
+1. Find PDFs in `books/`
+2. Check whether PDFs exist
+3. Extract page text
+4. Split text into chunks
+5. Generate embeddings
+6. Store text and metadata in SQLite
+7. Store embeddings in SQLite-Vec
+8. Rebuild the RAG index
 
-### `retrieve.py`
+---
+
+## `retrieve.py`
 
 The hybrid retrieval engine.
 
-It contains:
+Responsibilities:
 
-* BM25 retrieval
-* Vector retrieval
-* Result combination
-* SQLite database access
+* Load the current RAG database
+* Build the BM25 index
+* Generate query embeddings
+* Perform BM25 retrieval
+* Perform vector retrieval
+* Combine results
+* Remove duplicates
+* Return source/page/text information
+* Safely close the database connection
 
-### `chat.py`
+The updated implementation uses `try/finally` to ensure the database is closed after retrieval.
+
+---
+
+## `chat.py`
 
 The question-answering layer.
 
 It:
 
 1. Receives the user's question
-2. Retrieves relevant document chunks
-3. Builds the LLM context
-4. Sends the request to the local LLM
-5. Returns the answer and sources
+2. Calls the retrieval pipeline
+3. Builds the context
+4. Creates the local LLM request
+5. Sends the request
+6. Extracts the generated answer
+7. Returns the answer and sources
 
 ---
 
-## 🧰 Tech Stack
+# 🧰 Tech Stack
 
-| Component         | Technology                           |
-| ----------------- | ------------------------------------ |
-| Frontend          | Streamlit                            |
-| Language          | Python                               |
-| PDF Processing    | PyMuPDF                              |
-| Database          | SQLite                               |
-| Vector Database   | SQLite-Vec                           |
-| Keyword Retrieval | BM25                                 |
-| Embeddings        | Local embedding API                  |
-| LLM               | Local OpenAI-compatible API          |
-| Architecture      | Retrieval-Augmented Generation (RAG) |
+| Component         | Technology                     |
+| ----------------- | ------------------------------ |
+| Frontend          | Streamlit                      |
+| Language          | Python                         |
+| PDF Processing    | PyMuPDF                        |
+| Database          | SQLite                         |
+| Vector Search     | SQLite-Vec                     |
+| Keyword Retrieval | BM25                           |
+| Embeddings        | Local Embedding API            |
+| LLM               | Local OpenAI-compatible API    |
+| Architecture      | Retrieval-Augmented Generation |
 
 ---
 
-## 🚀 Getting Started
+# 🚀 Installation
 
-### Prerequisites
+## Prerequisites
 
 You need:
 
 * Python 3.x
-* A local embedding server running on:
+* A local embedding server
+* A local LLM server
+* SQLite-Vec support
+
+The current application expects the embedding service at:
 
 ```text
-http://127.0.0.1:8080
+http://127.0.0.1:8080/embedding
 ```
 
-* A local LLM/chat-completion server running on:
+and the LLM service at:
 
 ```text
 http://127.0.0.1:8081/v1/chat/completions
 ```
 
-The current code expects both services to be available locally.
+---
 
-### Install Python Dependencies
-
-Install the dependencies used by the project:
+## Install Python Dependencies
 
 ```bash
 pip install streamlit requests pymupdf sqlite-vec rank-bm25
 ```
 
-### Run the Application
+---
 
-Start the Streamlit application:
+# ▶️ Running Z1
+
+Start your local embedding server first.
+
+Then start your local LLM server.
+
+Finally run:
 
 ```bash
 streamlit run app.py
 ```
 
-Then open the local Streamlit URL shown in your terminal.
+Open the Streamlit URL displayed in the terminal.
 
 ---
 
-## 📚 Using Z1
+# 📚 Using Z1
 
-1. Start your local embedding server.
-2. Start your local LLM server.
-3. Run:
+### Step 1
+
+Start the local embedding service.
+
+### Step 2
+
+Start the local LLM service.
+
+### Step 3
+
+Launch Z1:
 
 ```bash
 streamlit run app.py
 ```
 
-4. Upload a PDF from the sidebar.
-5. Wait for the document to be indexed.
-6. Ask a question about the uploaded material.
-7. Z1 retrieves relevant passages and generates an answer.
-8. Expand **Sources** to see the document and page numbers used.
+### Step 4
+
+Upload a PDF using:
+
+**Sidebar → Upload PDF**
+
+### Step 5
+
+Wait for:
+
+```text
+Creating RAG...
+```
+
+After successful indexing:
+
+```text
+<filename>.pdf indexed!
+```
+
+### Step 6
+
+Ask a question.
+
+For example:
+
+```text
+What is the main concept discussed in chapter 2?
+```
+
+### Step 7
+
+Open **Sources** to see which PDF pages were used.
 
 ---
 
-## 🔐 Privacy & Offline Design
+# 🛡️ Error Handling & Reliability
 
-One of the core ideas behind Z1 is reducing dependence on cloud AI services.
+The updated version introduces several improvements to make the application more robust.
 
-The project is designed around local processing so that study materials can remain on the user's own computer rather than being uploaded to an external AI service.
+### Empty `books/` Directory
 
-The project's stated vision is to make AI-assisted learning accessible in environments where reliable internet connectivity or cloud AI services may not be available or affordable.
+If no PDF files exist, `ingest.py` now stops without destroying an existing RAG database.
+
+```text
+No PDF files found. Existing RAG database was left unchanged.
+```
+
+### Missing Database
+
+`retrieve.py` checks whether the database exists before attempting retrieval.
+
+If it isn't ready, retrieval returns an empty result instead of immediately failing.
+
+### Empty Index
+
+If the database exists but contains no indexed documents, BM25 is not initialized and retrieval safely returns no results.
+
+### Database Cleanup
+
+The retrieval process closes its SQLite connection in a `finally` block, helping prevent lingering database connections.
+
+### Ingestion Failure
+
+If indexing fails during a PDF upload, Streamlit now displays:
+
+```text
+Indexing failed with exit code <code>.
+```
+
+instead of allowing the subprocess error to crash the interface.
+
+---
+
+# 🔐 Privacy & Offline Design
+
+Z1 is built around the idea of keeping AI-assisted learning local.
+
+Study documents are processed and indexed on the user's machine, while the embedding and language-model services are expected to run locally.
+
+This reduces dependence on external cloud AI services and allows the project to target environments where reliable internet connectivity may not always be available.
 
 > **Your study material. Your machine. Your AI.**
 
 ---
 
-## ⚠️ Current Limitations
+# ⚠️ Current Limitations
 
-The current MVP has several limitations.
+## No OCR
 
-### No OCR
+Scanned or image-only PDFs are not currently supported because the ingestion pipeline extracts textual PDF content.
 
-Scanned or image-based PDFs cannot currently be processed because the system relies on extracted text.
+## No Visual Understanding
 
-### No Visual Understanding
+Diagrams, charts, handwritten notes, and other visual information are not currently interpreted.
 
-Diagrams, charts, handwritten notes, and other visual elements are not currently interpreted.
+## No Persistent Conversational Memory
 
-### No Persistent Conversational Memory
+Chat history is maintained within the current Streamlit session but is not stored as long-term memory.
 
-Chat history currently exists only within the application session and is not retained after the application closes.
+## Shared Knowledge Base
 
-### Shared Knowledge Database
+The current ingestion pipeline rebuilds a single SQLite knowledge base from the PDFs currently present in `books/`.
 
-Uploaded PDFs are currently stored in a shared SQLite knowledge base rather than separate subject-specific collections.
+## Limited Document Management
 
-### Limited Document Management
-
-Individual PDFs cannot currently be selectively activated, deactivated, or removed without rebuilding the database.
+There is currently no interface for individually activating, deactivating, or deleting specific documents from the knowledge base.
 
 ---
 
-## 🛣️ Roadmap
+# 🛣️ Roadmap
 
-The long-term roadmap includes:
+## 📓 Notebook-Based Knowledge Management
 
-### 📓 Notebook-Based Knowledge Management
+Allow students to organize PDFs into separate notebooks or subjects.
 
-Organize documents into separate notebooks or subjects so each course has its own knowledge base.
+```text
+Z1
+├── Mathematics
+├── Physics
+├── Computer Science
+└── Personal Notes
+```
 
-### 📝 Intelligent Mock Examinations
+Each subject could eventually have its own knowledge base.
 
-Generate examinations from uploaded study material and evaluate written answers instead of simply revealing the answer.
+---
 
-### ⏱️ Anti-Procrastination Learning Support
+## 📝 Intelligent Mock Examination System
 
-Move beyond passive question answering and actively guide students through focused learning sessions.
+Generate examinations directly from uploaded study materials.
 
-### 🧠 Adaptive Learning Assistance
+Future versions could:
 
-Detect when a student is struggling with a concept and provide hints, simpler explanations, or alternative approaches.
+* Generate questions
+* Accept written answers
+* Evaluate answers
+* Provide scores
+* Give feedback
+* Identify weak areas
 
-### 👁️ Multimodal Document Understanding
+---
 
-Add support for:
+## ⏱️ Learning & Anti-Procrastination Support
+
+Move beyond simply answering questions.
+
+Z1 could eventually guide students through structured learning sessions and encourage focused study.
+
+---
+
+## 🧠 Adaptive Learning Assistance
+
+If a student repeatedly struggles with a concept, Z1 could provide:
+
+* Hints
+* Simpler explanations
+* Examples
+* Alternative explanations
+* Targeted practice
+
+---
+
+## 👁️ Multimodal Document Understanding
+
+Future versions could understand:
 
 * Diagrams
 * Charts
 * Tables
-* Educational images
-* Other visual study material
+* Images
+* Handwritten notes
+* Other visual study materials
 
 ---
 
-## 🎯 Long-Term Vision
+# 🎯 Long-Term Vision
 
-Z1 is intended to evolve beyond a simple PDF chatbot.
-
-The ultimate goal is a **privacy-preserving personal AI tutor** that can understand a user's knowledge, organize information, assist with learning, and eventually act as a personal "second brain."
+Z1 is intended to evolve beyond a PDF chatbot.
 
 ```text
 PDF Chatbot
@@ -375,16 +592,18 @@ Adaptive AI Tutor
 Personal AI "Second Brain"
 ```
 
+The ultimate goal is a **privacy-preserving personal AI tutor** that can understand a user's knowledge, organize information, assist with learning, and eventually become a personal second brain.
+
 ---
 
-## 🤝 Contributing
+# 🤝 Contributing
 
-Contributions, ideas, experiments, and improvements are welcome.
+Contributions, experiments, ideas, and improvements are welcome.
 
-Some areas that would be especially useful:
+Potential areas for contribution:
 
-* Better retrieval/ranking
-* OCR support
+* Better retrieval and ranking
+* OCR
 * Multimodal RAG
 * Document management
 * Persistent memory
@@ -392,40 +611,70 @@ Some areas that would be especially useful:
 * Local model optimization
 * Mock examination generation
 * Learning analytics
+* UI/UX improvements
+* Retrieval evaluation and benchmarking
 
 ---
 
-## 📜 Project Status
+# 📊 Project Status
 
-**Current status:** MVP / Experimental
+**Status: MVP / Experimental**
 
-Z1 currently demonstrates the core concept of an **offline hybrid RAG study assistant**. The system is functional but intentionally serves as a foundation for the larger vision of a personal offline AI learning companion.
+Z1 currently demonstrates a working offline Hybrid RAG pipeline consisting of:
+
+```text
+PDF
+ ↓
+Text Extraction
+ ↓
+Chunking
+ ↓
+Local Embeddings
+ ↓
+SQLite + SQLite-Vec
+ ↓
+BM25 + Vector Retrieval
+ ↓
+Local LLM
+ ↓
+Grounded Answer
+ ↓
+Source Pages
+```
+
+The current version focuses on making the core RAG pipeline reliable while providing a foundation for future personalized learning features.
 
 ---
 
-## ⭐ Why Z1?
+# ⭐ Why Z1?
 
-Most AI study tools assume that the user has:
+Many modern AI study tools depend heavily on:
 
 * Reliable internet
-* Access to cloud AI services
-* Willingness to upload personal documents
-* Sufficient connectivity for continuous AI usage
+* Cloud AI services
+* External APIs
+* Uploading personal documents
 
-Z1 explores a different approach:
+Z1 explores a different question:
 
 > **What if useful AI learning assistance could run locally on an ordinary personal computer?**
 
-That question is the foundation of Z1.
+The project is an attempt to build toward that idea — starting with offline document retrieval and gradually moving toward a private, adaptive personal AI tutor.
 
 ---
 
-## 📌 License
+# 📌 License
 
-Add your preferred open-source license here, for example **MIT**, before publishing the repository.
+No license has currently been specified for the project.
+
+If you plan to publish Z1 as open source, add an appropriate license such as MIT, Apache-2.0, or another license that matches your goals.
 
 ---
 
-**Z1 — Offline AI Study Assistant**
+<div align="center">
+
+**📘 Z1 — Offline AI Study Assistant**
 
 *Learn from your knowledge. Run your AI locally. Build your second brain.*
+
+</div>
