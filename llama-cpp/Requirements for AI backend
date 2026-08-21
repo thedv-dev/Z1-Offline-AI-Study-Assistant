@@ -1,0 +1,2 @@
+You have to dowwnload the official builds of llama.cpp from https://github.com/ggml-org/llama.cpp/releases
+Or clone the repo from https://github.com/ggml-org/llama.cpp and build it on your device
